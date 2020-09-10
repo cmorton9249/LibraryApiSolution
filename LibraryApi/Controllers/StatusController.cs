@@ -1,14 +1,18 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using LibraryApi.Services;
+using Microsoft.AspNetCore.Mvc;
 using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Reflection.Metadata.Ecma335;
-using System.Threading.Tasks;
 
 namespace LibraryApi.Controllers
 {
 	public class StatusController : ControllerBase
 	{
+		private readonly ISystemTime _clock;
+
+		public StatusController(ISystemTime clock)
+		{
+			_clock = clock;
+		}
+
 		[HttpPost("employees")]
 		public ActionResult Hire([FromBody] EmployeeCreateRequest employeeTohire)
 		{
@@ -67,7 +71,7 @@ namespace LibraryApi.Controllers
 			{
 				Message = "Looks good on my end.  Party on.",
 				CheckedBy = "Joe Schmidt",
-				WhenChecked = DateTime.Now
+				WhenChecked = _clock.GetCurrent()
 			};
 			return Ok(status);
 		}
