@@ -2,6 +2,8 @@
 using AutoMapper.QueryableExtensions;
 using LibraryApi.Domain;
 using LibraryApi.Models.Books;
+using Microsoft.AspNetCore.Builder;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using System.Linq;
@@ -24,7 +26,8 @@ namespace LibraryApi.Controllers
 
 		// GET /books - Returns a collection of all our books.  Can filter by genre
 		[HttpGet("books")]
-		public async Task<ActionResult> GetAllBooks([FromQuery] string genre = "all")
+		[Produces("application/json")]
+		public async Task<ActionResult<GetBookResponse>> GetAllBooks([FromQuery] string genre = "all")
 		{
 			var result = _context.Books
 				.Where(x => x.RemovedFromInventory == false);
@@ -46,8 +49,16 @@ namespace LibraryApi.Controllers
 
 		//Get /books/{id}
 
+		/// <summary>
+		/// Retrieve a single book
+		/// </summary>
+		/// <param name="bookId">The id of the book you wish to retrieve</param>
+		/// <returns>A book or a 404</returns>
 		[HttpGet("books/{bookId:int}")]
-		public async Task<ActionResult> GetBookById(int bookId)
+		[Produces("application/json")]
+		[ProducesResponseType(StatusCodes.Status200OK)]
+		[ProducesResponseType(StatusCodes.Status404NotFound)]
+		public async Task<ActionResult<GetBookDetailsResponse>> GetBookById(int bookId)
 		{
 			var response = await _context.Books
 				.Where(b => !b.RemovedFromInventory && b.Id == bookId)
