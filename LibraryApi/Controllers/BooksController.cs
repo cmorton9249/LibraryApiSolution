@@ -2,7 +2,6 @@
 using AutoMapper.QueryableExtensions;
 using LibraryApi.Domain;
 using LibraryApi.Models.Books;
-using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -54,7 +53,7 @@ namespace LibraryApi.Controllers
 		/// </summary>
 		/// <param name="bookId">The id of the book you wish to retrieve</param>
 		/// <returns>A book or a 404</returns>
-		[HttpGet("books/{bookId:int}")]
+		[HttpGet("books/{bookId:int}", Name = "books#getbookbyid")]
 		[Produces("application/json")]
 		[ProducesResponseType(StatusCodes.Status200OK)]
 		[ProducesResponseType(StatusCodes.Status404NotFound)]
@@ -72,6 +71,30 @@ namespace LibraryApi.Controllers
 			return NotFound();
 		}
 
+		[HttpPost("books")]
+		public async Task<ActionResult> AddBook([FromBody] BookCreateRequest bookToAdd)
+		{
+			// 1. Validate the incoming entity
+			if (!ModelState.IsValid)
+			{
+				// -- if it fails, send back a 400 with or without details.
+				return BadRequest(ModelState);
+			}
+
+			// 2. change the domain
+			// -- add the book to the Database (BookCreateRequest -> Book)
+			var book = _mapper.Map<Book>(bookToAdd);
+			_context.Books.Add(book);
+			await _context.SaveChangesAsync();
+			var response = _mapper.Map<GetBookDetailsResponse>(book);
+			// 3. Return 
+			// -- 201 Created
+			// -- Location Header (what the name of the new book is (name being the URI)
+			// -- a copy of the book
+
+			return CreatedAtRoute("books#getbookbyid", new { bookId = response.Id }, response);
+		}
+
 		[HttpDelete("books/{bookId:int}")]
 		public async Task<ActionResult> RemoveBooksFromInventory(int bookId)
 		{
@@ -83,6 +106,22 @@ namespace LibraryApi.Controllers
 				await _context.SaveChangesAsync();
 			}
 
+			return NoContent();
+		}
+
+		[HttpPut("books/{bookId:int}/genre")]
+		public async Task<ActionResult> UpdateGere(int bookId, [FromBody] string newGenre)
+		{
+			var book = await _context.Books.Where(b => b.Id == bookId).SingleOrDefaultAsync();
+
+			if (book == null)
+			{
+				return NotFound();
+			}
+
+			book.Genre = newGenre;
+			_context.Update(book);
+			await _context.SaveChangesAsync();
 			return NoContent();
 		}
 	}

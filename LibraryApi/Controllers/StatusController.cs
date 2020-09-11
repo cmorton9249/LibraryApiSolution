@@ -13,6 +13,7 @@ namespace LibraryApi.Controllers
 			_clock = clock;
 		}
 
+		[ApiExplorerSettings(IgnoreApi = true)]
 		[HttpPost("employees")]
 		public ActionResult Hire([FromBody] EmployeeCreateRequest employeeTohire)
 		{
